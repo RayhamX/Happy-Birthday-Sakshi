@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two Worlds, One Birthday</title>
+<meta name="theme-color" content="#e58aa0">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/icon-192.png">
+<style>
+:root{--bg:#fff4f1;--ink:#4a2631;--soft:#8a5a66;--accent:#e58aa0;--card:#ffffff;--glow:rgba(229,138,160,.35);--display:Georgia,'Times New Roman',serif;--body:'Trebuchet MS',system-ui,sans-serif}
+[data-theme=night]{--bg:#05060f;--ink:#e9eeff;--soft:#8fa0d6;--accent:#2f6bff;--card:#0d1226;--glow:rgba(47,107,255,.45)}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.6;transition:background .5s,color .5s;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(60% 40% at 50% 0,var(--glow),transparent 70%)}
+.top{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;backdrop-filter:blur(10px);background:color-mix(in srgb,var(--bg) 70%,transparent)}
+.top b{font-family:var(--display);font-size:1.05rem}
+.tog{display:flex;border:1px solid var(--accent);border-radius:99px;overflow:hidden}
+.tog button{border:0;background:none;color:var(--ink);padding:8px 18px;font:inherit;cursor:pointer}
+.tog button[aria-pressed=true]{background:var(--accent);color:#fff}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;max-width:1100px;margin:0 auto;padding:48px 20px}
+.hero h1{font-family:var(--display);font-size:clamp(2.2rem,6vw,4.4rem);line-height:1.05;font-weight:400}
+.hero p{margin-top:18px;font-size:1.2rem;color:var(--soft);max-width:30ch;font-family:var(--display);font-style:italic}
+.hero img{width:100%;aspect-ratio:4/5;object-fit:cover;object-position:top;border-radius:46% 46% 12px 12px;box-shadow:0 20px 60px var(--glow)}
+.age{max-width:900px;margin:20px auto;padding:36px 20px;text-align:center}
+.age .n{font-family:var(--display);font-size:clamp(6rem,24vw,13rem);line-height:1;color:var(--accent);text-shadow:0 0 50px var(--glow)}
+.age h2{font-family:var(--display);font-weight:400;font-size:1.6rem}
+.cd{display:flex;justify-content:center;gap:14px;margin:22px 0 10px;flex-wrap:wrap}
+.cd div{background:var(--card);border-radius:14px;padding:12px 16px;min-width:76px;border:1px solid color-mix(in srgb,var(--accent) 40%,transparent)}
+.cd strong{display:block;font-family:var(--display);font-size:1.9rem}
+.cd span{font-size:.8rem;color:var(--soft)}
+.lived{color:var(--soft)}
+.gal{max-width:1100px;margin:0 auto;padding:30px 20px 70px;columns:3 260px;column-gap:18px}
+.gal figure{break-inside:avoid;margin:0 0 18px;background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 8px 30px var(--glow)}
+.gal img{width:100%;display:block}
+.gal figcaption{padding:14px 16px 18px;font-family:var(--display);font-style:italic}
+footer{text-align:center;padding:30px;color:var(--soft)}
+@media(max-width:760px){.hero{grid-template-columns:1fr}.hero img{order:-1;max-width:340px;margin:auto}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body data-theme="day">
+<header class="top"><b>Two Worlds, One Birthday</b>
+<div class="tog" role="group" aria-label="Theme"><button id="bd" aria-pressed="true">Day</button><button id="bn" aria-pressed="false">Night</button></div></header>
+<section class="hero"><div><h1 id="title">Sakshi Chaudhary</h1><p id="quote"></p></div><img id="hero" alt="Sakshi"></section>
+<section class="age" aria-live="polite"><h2 id="agelabel"></h2><div class="n" id="age"></div>
+<div class="cd" id="cd"></div><p class="lived" id="lived"></p></section>
+<section class="gal" id="gal"></section>
+<footer id="foot"></footer>
+<script>
+// ---- Edit these only ----
+var NAME="Sakshi", DOB=new Date(2008,9,19); // 19 Oct 2008 (month 0-indexed)
+var THEMES={
+ day:{hero:"Image-01",quote:"A little world of flowers, made for someone unforgettable.",foot:"Day: made with love and a lot of flowers",
+  gal:[["Image-04","Some people make ordinary moments feel like magic"],["Image-05","May your smile always find a thousand reasons to stay"],["Image-06","Keep blooming, even when the world forgets to water the flowers"],["Image-07","The prettiest memories are made in ordinary moments"],["Image-08","A little messy, a little magic, completely unforgettable"]]},
+ night:{hero:"Image-02",quote:"Every universe needs a hero. Tonight, it's her.",foot:"Night: every hero needs a birthday",
+  gal:[["Image-09","Not everyone wears a mask. Some just steal the scene"],["Image-10","Looks innocent. Probably plotting something iconic"],["Image-11","Plot twist: she was the whole storyline"],["Image-12","Elegance by day. Legendary after dark"],["Image-13","Saving the world can wait. It's her birthday"]]} };
+// -------------------------
+var $=function(i){return document.getElementById(i)};
+function ord(n){var s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+function today(n){return new Date(n.getFullYear(),n.getMonth(),n.getDate())}
+function info(now){
+ var t=today(now),age=t.getFullYear()-DOB.getFullYear();
+ var bd=new Date(t.getFullYear(),DOB.getMonth(),DOB.getDate());
+ if(t<bd)age--;
+ var next=new Date(t.getFullYear(),DOB.getMonth(),DOB.getDate());
+ if(next<t)next.setFullYear(next.getFullYear()+1);
+ return{age:age,next:next,isB:+next===+t,lived:Math.floor((t-DOB)/864e5)}}
+function tick(){
+ var now=new Date(),i=info(now);
+ if(i.isB){
+  $("agelabel").textContent="Happy "+ord(i.age)+" Birthday, "+NAME+"!";
+  $("age").textContent=i.age;$("cd").innerHTML="";
+ }else{
+  var d=i.next-now,s=Math.floor(d/1000);
+  $("agelabel").textContent=NAME+" is";
+  $("age").textContent=i.age;
+  var p=[[Math.floor(s/86400),"days"],[Math.floor(s%86400/3600),"hours"],[Math.floor(s%3600/60),"minutes"],[s%60,"seconds"]];
+  $("cd").innerHTML=p.map(function(x){return"<div><strong>"+x[0]+"</strong><span>"+x[1]+"</span></div>"}).join("");
+  $("cd").setAttribute("aria-label","Time until "+ord(i.age+1)+" birthday");
+  $("lived").textContent="Until the "+ord(i.age+1)+" birthday. "+i.lived.toLocaleString()+" days lived so far.";
+  return}
+ $("lived").textContent=i.lived.toLocaleString()+" days lived so far.";}
+function set(m){
+ var T=THEMES[m];document.body.dataset.theme=m;
+ $("hero").src="assets/+T.hero+.jpg";$("quote").textContent=T.quote;$("foot").textContent=T.foot;
+ $("gal").innerHTML=T.gal.map(function(g){return'<figure><img loading="lazy" src="assets/'+g[0]+'.jpg" alt="'+g[1]+'"><figcaption>'+g[1]+'</figcaption></figure>'}).join("");
+ $("bd").setAttribute("aria-pressed",m==="day");$("bn").setAttribute("aria-pressed",m==="night");
+ document.querySelector('meta[name=theme-color]').content=m==="day"?"#e58aa0":"#05060f";
+ try{localStorage.setItem("tw-theme",m)}catch(e){}}
+$("bd").onclick=function(){set("day")};$("bn").onclick=function(){set("night")};
+var saved="day";try{saved=localStorage.getItem("tw-theme")||"day"}catch(e){}
+set(THEMES[saved]?saved:"day");tick();setInterval(tick,1000);
+if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0)navigator.serviceWorker.register("sw.js").catch(function(){});
+</script>
+</body>
+</html>
